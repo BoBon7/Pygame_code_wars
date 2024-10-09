@@ -31,6 +31,7 @@ class PlayerCar:
         self.invincible = False
         self.invincible_timer = 0
         self.slowdown_timer = 0
+        self.slowdown_timer = 0
 
     def update(self):
         keys = pygame.key.get_pressed()
@@ -69,6 +70,11 @@ class PlayerCar:
                 self.invincible = False  # Неуязвимость закончилась
 
     def draw(self, screen):
+        # Если неуязвимость активна, цвет машины меняется на зелёный
+        if self.invincible:
+            self.image.fill((0, 255, 0))  # Зелёный цвет при неуязвимости
+        else:
+            self.image.fill(WHITE)  # Стандартный цвет
         screen.blit(self.image, self.rect)
 
 
@@ -102,7 +108,7 @@ class Obstacle:
         self.image.fill(RED)
         self.rect = self.image.get_rect(center=(random.randint(50, WIDTH - 50), -50))
         self.base_speed = 3
-        self.speed = random.randint(self.base_speed, int(self.base_speed * 1.8))
+        self.speed = round(random.uniform(self.base_speed, self.base_speed * 1.5), 1)
 
     def update(self):
         self.rect.y += self.speed
@@ -117,7 +123,6 @@ def increase_difficulty(timer):
     if timer % 300 == 0:  # Каждые 5 секунд увеличивается сложность
         for obstacle in obstacles:
             obstacle.base_speed += 0.5  # Увеличение скорости препятствий
-            print(obstacle.speed)
         player.speed += 0.1  # Увеличение скорости машины
 
 
@@ -128,7 +133,13 @@ def draw_interface(screen, score, speed):
     screen.blit(score_text, (10, 10))
     screen.blit(speed_text, (10, 50))
 
-    # Отображение бонусов
+
+def check_collisions(player, obstacles):
+    if not player.invincible:  # Если нет неуязвимости
+        for obstacle in obstacles:
+            if player.rect.colliderect(obstacle.rect):
+                return True  # Столкновение произошло
+    return False
 
 
 def check_bonus_collision(player, bonuses, obstacles):
@@ -192,6 +203,11 @@ while running:
 
     # Проверка столкновений с бонусами
     check_bonus_collision(player, bonuses, obstacles)
+
+    # Проверка столкновений с препятствиями
+    if check_collisions(player, obstacles):
+        print("Игра окончена!")  # Здесь можно добавить логику окончания игры
+        running = False
 
     # Рендеринг объектов
     screen.fill(BLACK)
