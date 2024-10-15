@@ -163,7 +163,7 @@ class Button:
     def draw(self, screen):
         pygame.draw.rect(screen, self.color, self.rect)
         text_surface = self.font.render(self.text, True, BLACK)
-        screen.blit(text_surface, (self.rect.x + 20, self.rect.y + 20))
+        screen.blit(text_surface, (self.rect.x + 20, self.rect.y + 25))
 
     def is_clicked(self, pos):
         return self.rect.collidepoint(pos)
@@ -173,12 +173,14 @@ class Button:
 def main_menu():
     global game_mode
     play_button = Button(WIDTH // 2 - 150 // 2, HEIGHT // 2 - 50, 150, 80, "Играть")
-    exit_button = Button(WIDTH // 2 - 150 // 2, HEIGHT // 2 + 50, 150, 80, "Выйти")
+    score_button = Button(WIDTH // 2 - 340 // 2, HEIGHT // 2 + 50, 340, 80, "Таблица лидеров")
+    exit_button = Button(WIDTH // 2 - 150 // 2, HEIGHT // 2 + 150, 150, 80, "Выйти")
     menu_running = True
 
     while menu_running:
         screen.fill(BLACK)
         play_button.draw(screen)
+        score_button.draw(screen)
         exit_button.draw(screen)
 
         for event in pygame.event.get():
@@ -189,9 +191,12 @@ def main_menu():
                 if play_button.is_clicked(event.pos):
                     game_mode = "game"
                     return
-                if exit_button.is_clicked(event.pos):
+                elif exit_button.is_clicked(event.pos):
                     pygame.quit()
                     quit()
+                elif score_button.is_clicked(event.pos):
+                    game_mode = "score"
+                    return
 
         pygame.display.flip()
         clock.tick(FPS)
@@ -209,11 +214,53 @@ def reset():
 def lose_menu():
     global game_mode
     play_button = Button(WIDTH // 2 - 270 // 2, HEIGHT // 2 - 50, 270, 80, "Играть снова")
-    exit_button = Button(WIDTH // 2 - 150 // 2, HEIGHT // 2 + 50, 150, 80, "Выйти")
+    score_button = Button(WIDTH // 2 - 340 // 2, HEIGHT // 2 + 50, 340, 80, "Таблица лидеров")
+    exit_button = Button(WIDTH // 2 - 150 // 2, HEIGHT // 2 + 150, 150, 80, "Выйти")
     menu_running = True
 
     while menu_running:
         screen.fill(BLACK)
+        play_button.draw(screen)
+        score_button.draw(screen)
+        exit_button.draw(screen)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if play_button.is_clicked(event.pos):
+                    game_mode = "game"
+                    reset()
+                    return
+                elif exit_button.is_clicked(event.pos):
+                    pygame.quit()
+                    quit()
+                elif score_button.is_clicked(event.pos):
+                    game_mode = "score"
+                    return
+
+        pygame.display.flip()
+        clock.tick(FPS)
+
+
+def score_menu():
+    global game_mode
+    play_button = Button(WIDTH // 2 - 150 // 2, HEIGHT // 2 + 150, 150, 80, "Играть")
+    exit_button = Button(WIDTH // 2 - 150 // 2, HEIGHT // 2 + 250, 150, 80, "Выйти")
+    menu_running = True
+    font = pygame.font.SysFont(None, 48)
+    with open("score.txt", "r", encoding="utf-8") as file:
+        score_list = file.readlines()
+    score_list = [int(score[:-1]) for score in score_list]
+    score_list.sort(reverse=True)
+    while menu_running:
+        screen.fill(BLACK)
+        score_y = 10
+        for score in score_list[:10]:
+            score_text = font.render(f"Score: {score}", True, WHITE)
+            screen.blit(score_text, (WIDTH // 2 - 65, score_y))
+            score_y += 40
         play_button.draw(screen)
         exit_button.draw(screen)
 
@@ -226,7 +273,7 @@ def lose_menu():
                     game_mode = "game"
                     reset()
                     return
-                if exit_button.is_clicked(event.pos):
+                elif exit_button.is_clicked(event.pos):
                     pygame.quit()
                     quit()
 
@@ -297,8 +344,10 @@ running = True
 while running:
     if game_mode == "menu":
         main_menu()
-    elif game_mode == "lose":
+    if game_mode == "lose":
         lose_menu()
+    if game_mode == "score":
+        score_menu()
     clock.tick(FPS)
     bonus_timer += 1
 
@@ -335,6 +384,8 @@ while running:
 
     # Проверка столкновений с препятствиями
     if check_collisions(player, obstacles):
+        with open("score.txt", "a", encoding="utf-8") as file:
+            file.write(f"{player.score}\n")
         game_mode = "lose"
 
     # Рендеринг объектов
