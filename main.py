@@ -12,6 +12,7 @@ FPS = 60
 WHITE = (255, 255, 255)
 BLACK = (0, 0, 0)
 RED = (255, 0, 0)
+BACKGROUND = pygame.image.load("space.jpg")
 
 # Создаем экран
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
@@ -131,6 +132,7 @@ def update_bullets(bullets, bonuses, obstacles):
         for obstacle in obstacles[:]:
             if bullet.rect.colliderect(obstacle.rect):
                 obstacles.remove(obstacle)  # Уничтожаем препятствие
+                player.score += 1
                 obstacles.append(Obstacle())
                 bullets.remove(bullet)  # Уничтожаем снаряд
                 break  # Выходим, так как снаряд уже уничтожен
@@ -178,7 +180,7 @@ def main_menu():
     menu_running = True
 
     while menu_running:
-        screen.fill(BLACK)
+        screen.blit(BACKGROUND, (0, 0))
         play_button.draw(screen)
         score_button.draw(screen)
         exit_button.draw(screen)
@@ -219,7 +221,7 @@ def lose_menu():
     menu_running = True
 
     while menu_running:
-        screen.fill(BLACK)
+        screen.blit(BACKGROUND, (0, 0))
         play_button.draw(screen)
         score_button.draw(screen)
         exit_button.draw(screen)
@@ -255,7 +257,7 @@ def score_menu():
     score_list = [int(score[:-1]) for score in score_list]
     score_list.sort(reverse=True)
     while menu_running:
-        screen.fill(BLACK)
+        screen.blit(BACKGROUND, (0, 0))
         score_y = 10
         for score in score_list[:10]:
             score_text = font.render(f"Score: {score}", True, WHITE)
@@ -389,7 +391,7 @@ while running:
         game_mode = "lose"
 
     # Рендеринг объектов
-    screen.fill(BLACK)
+    screen.blit(BACKGROUND, (0, 0))
     player.draw(screen)
     for obstacle in obstacles:
         obstacle.draw(screen)
