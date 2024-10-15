@@ -21,8 +21,7 @@ pygame.display.set_caption("Гоночная игра")
 # Создаем класс Машины
 class PlayerCar:
     def __init__(self):
-        self.image = pygame.Surface((50, 100))
-        self.image.fill(WHITE)
+        self.image = pygame.image.load("rocket.png")
         self.rect = self.image.get_rect(center=(WIDTH // 2, HEIGHT - 120))
         self.speed = 5
         self.dx = 0
@@ -72,9 +71,9 @@ class PlayerCar:
     def draw(self, screen):
         # Если неуязвимость активна, цвет машины меняется на зелёный
         if self.invincible:
-            self.image.fill((0, 255, 0))  # Зелёный цвет при неуязвимости
+            self.image = pygame.image.load("rocket-invincible.png")
         else:
-            self.image.fill(WHITE)  # Стандартный цвет
+            self.image = pygame.image.load("rocket.png")
         screen.blit(self.image, self.rect)
 
 
@@ -82,13 +81,12 @@ class PlayerCar:
 class Bonus:
     def __init__(self, bonus_type):
         self.bonus_type = bonus_type
-        self.image = pygame.Surface((30, 30))
         if self.bonus_type == 'invincibility':
-            self.image.fill((20, 255, 20))  # Зеленый для неуязвимости
+            self.image = pygame.image.load("guard.png")
         elif self.bonus_type == 'slowdown':
-            self.image.fill((0, 0, 255))  # Синий для замедления
+            self.image = pygame.image.load("back-in-time.png")
         elif self.bonus_type == 'coin':
-            self.image.fill((255, 255, 0))  # Желтый для монет
+            self.image = pygame.image.load("dollar.png")
         self.rect = self.image.get_rect(center=(random.randint(50, WIDTH - 50), -50))
         self.speed = 2
 
@@ -103,8 +101,7 @@ class Bonus:
 
 class Bullet:
     def __init__(self, x, y):
-        self.image = pygame.Surface((5, 10))
-        self.image.fill(WHITE)
+        self.image = pygame.image.load("laser.png")
         self.rect = self.image.get_rect(center=(x, y))
         self.speed = 10
 
@@ -141,11 +138,10 @@ def update_bullets(bullets, bonuses, obstacles):
 # Класс для препятствий
 class Obstacle:
     def __init__(self):
-        self.image = pygame.Surface((50, 50))
-        self.image.fill(RED)
+        self.image = pygame.image.load("ufo.png")
         self.rect = self.image.get_rect(center=(random.randint(50, WIDTH - 50), -50))
-        self.base_speed = 2
-        self.speed = round(random.uniform(self.base_speed, self.base_speed * 1.5), 1)
+        self.base_speed = 1
+        self.speed = round(random.uniform(self.base_speed, self.base_speed * 1.5), 2)
 
     def update(self):
         self.rect.y += self.speed
@@ -159,7 +155,7 @@ class Obstacle:
 def increase_difficulty(timer):
     if timer % 300 == 0:  # Каждые 5 секунд увеличивается сложность
         for obstacle in obstacles:
-            obstacle.base_speed += 0.5  # Увеличение скорости препятствий
+            obstacle.base_speed += 0.4  # Увеличение скорости препятствий
         player.speed += 0.1  # Увеличение скорости машины
 
 
@@ -189,7 +185,7 @@ def check_bonus_collision(player, bonuses, obstacles):
                 player.invincible_timer += 600
             elif bonus.bonus_type == 'slowdown':
                 for obstacle in obstacles:
-                    obstacle.speed -= 2
+                    obstacle.speed /= 2
                 player.slowdown_timer += 600
             elif bonus.bonus_type == 'coin':
                 player.score += 10  # Добавляем очки
@@ -202,8 +198,8 @@ def update_obstacle(obstacle, player):
     if player.slowdown_timer > 0:
         player.slowdown_timer -= 1
     else:
-        if obstacle.speed < 3:
-            obstacle.speed += 1  # Восстановление скорости после замедления
+        if obstacle.speed < obstacle.base_speed:
+            obstacle.speed += abs(obstacle.base_speed - obstacle.speed) # Восстановление скорости после замедления
 
 
 clock = pygame.time.Clock()
@@ -265,7 +261,7 @@ while running:
         bullet.draw(screen)
 
     # Отрисовка интерфейса
-    draw_interface(screen, player.score, obstacle.base_speed, player.invincible_timer)
+    draw_interface(screen, player.score, obstacles[0].base_speed, player.invincible_timer)
     pygame.display.flip()
 
 pygame.quit()
