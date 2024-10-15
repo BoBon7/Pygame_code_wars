@@ -163,7 +163,7 @@ class Button:
     def draw(self, screen):
         pygame.draw.rect(screen, self.color, self.rect)
         text_surface = self.font.render(self.text, True, BLACK)
-        screen.blit(text_surface, (self.rect.x + 20, self.rect.y + 10))
+        screen.blit(text_surface, (self.rect.x + 20, self.rect.y + 20))
 
     def is_clicked(self, pos):
         return self.rect.collidepoint(pos)
@@ -172,12 +172,14 @@ class Button:
 # Функция для стартового экрана
 def main_menu():
     global game_mode
-    play_button = Button(WIDTH // 2 - 100, HEIGHT // 2 - 50, 200, 100, "Играть")
+    play_button = Button(WIDTH // 2 - 150 // 2, HEIGHT // 2 - 50, 150, 80, "Играть")
+    exit_button = Button(WIDTH // 2 - 150 // 2, HEIGHT // 2 + 50, 150, 80, "Выйти")
     menu_running = True
 
     while menu_running:
         screen.fill(BLACK)
         play_button.draw(screen)
+        exit_button.draw(screen)
 
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
@@ -187,15 +189,57 @@ def main_menu():
                 if play_button.is_clicked(event.pos):
                     game_mode = "game"
                     return
+                if exit_button.is_clicked(event.pos):
+                    pygame.quit()
+                    quit()
 
         pygame.display.flip()
         clock.tick(FPS)
+
+
+def reset():
+    global player, obstacles, bonuses, bullets, bonus_timer
+    player = PlayerCar()
+    obstacles = [Obstacle() for _ in range(5)]
+    bonuses = []
+    bullets = []
+    bonus_timer = 0
+
+
+def lose_menu():
+    global game_mode
+    play_button = Button(WIDTH // 2 - 270 // 2, HEIGHT // 2 - 50, 270, 80, "Играть снова")
+    exit_button = Button(WIDTH // 2 - 150 // 2, HEIGHT // 2 + 50, 150, 80, "Выйти")
+    menu_running = True
+
+    while menu_running:
+        screen.fill(BLACK)
+        play_button.draw(screen)
+        exit_button.draw(screen)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if play_button.is_clicked(event.pos):
+                    game_mode = "game"
+                    reset()
+                    return
+                if exit_button.is_clicked(event.pos):
+                    pygame.quit()
+                    quit()
+
+        pygame.display.flip()
+        clock.tick(FPS)
+
 
 def increase_difficulty(timer):
     if timer % 300 == 0:  # Каждые 5 секунд увеличивается сложность
         for obstacle in obstacles:
             obstacle.base_speed += 0.4  # Увеличение скорости препятствий
-        player.speed += 0.3  # Увеличение скорости машины
+        player.speed += 0.15  # Увеличение скорости машины
+        player.score += 5
 
 
 def draw_interface(screen, score, speed, invincible_timer):
@@ -253,6 +297,8 @@ running = True
 while running:
     if game_mode == "menu":
         main_menu()
+    elif game_mode == "lose":
+        lose_menu()
     clock.tick(FPS)
     bonus_timer += 1
 
@@ -289,8 +335,7 @@ while running:
 
     # Проверка столкновений с препятствиями
     if check_collisions(player, obstacles):
-        print("Игра окончена!")  # Здесь можно добавить логику окончания игры
-        running = False
+        game_mode = "lose"
 
     # Рендеринг объектов
     screen.fill(BLACK)
