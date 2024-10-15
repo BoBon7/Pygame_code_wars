@@ -5,7 +5,7 @@ import random
 pygame.init()
 
 # Константы
-WIDTH, HEIGHT = 800, 600
+WIDTH, HEIGHT = 1400, 800
 FPS = 60
 
 # Цвета
@@ -23,7 +23,7 @@ class PlayerCar:
     def __init__(self):
         self.image = pygame.image.load("rocket.png")
         self.rect = self.image.get_rect(center=(WIDTH // 2, HEIGHT - 120))
-        self.speed = 5
+        self.speed = 6
         self.dx = 0
         self.dy = 0
         self.score = 0
@@ -114,6 +114,7 @@ class Bullet:
     def draw(self, screen):
         screen.blit(self.image, self.rect)
 
+
 def update_bullets(bullets, bonuses, obstacles):
     for bullet in bullets[:]:
         if not bullet.update():
@@ -152,11 +153,49 @@ class Obstacle:
         screen.blit(self.image, self.rect)
 
 
+class Button:
+    def __init__(self, x, y, width, height, text):
+        self.rect = pygame.Rect(x, y, width, height)
+        self.text = text
+        self.font = pygame.font.SysFont(None, 48)
+        self.color = WHITE
+
+    def draw(self, screen):
+        pygame.draw.rect(screen, self.color, self.rect)
+        text_surface = self.font.render(self.text, True, BLACK)
+        screen.blit(text_surface, (self.rect.x + 20, self.rect.y + 10))
+
+    def is_clicked(self, pos):
+        return self.rect.collidepoint(pos)
+
+
+# Функция для стартового экрана
+def main_menu():
+    global game_mode
+    play_button = Button(WIDTH // 2 - 100, HEIGHT // 2 - 50, 200, 100, "Играть")
+    menu_running = True
+
+    while menu_running:
+        screen.fill(BLACK)
+        play_button.draw(screen)
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                quit()
+            elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                if play_button.is_clicked(event.pos):
+                    game_mode = "game"
+                    return
+
+        pygame.display.flip()
+        clock.tick(FPS)
+
 def increase_difficulty(timer):
     if timer % 300 == 0:  # Каждые 5 секунд увеличивается сложность
         for obstacle in obstacles:
             obstacle.base_speed += 0.4  # Увеличение скорости препятствий
-        player.speed += 0.1  # Увеличение скорости машины
+        player.speed += 0.3  # Увеличение скорости машины
 
 
 def draw_interface(screen, score, speed, invincible_timer):
@@ -199,7 +238,7 @@ def update_obstacle(obstacle, player):
         player.slowdown_timer -= 1
     else:
         if obstacle.speed < obstacle.base_speed:
-            obstacle.speed += abs(obstacle.base_speed - obstacle.speed) # Восстановление скорости после замедления
+            obstacle.speed += abs(obstacle.base_speed - obstacle.speed)  # Восстановление скорости после замедления
 
 
 clock = pygame.time.Clock()
@@ -209,8 +248,11 @@ bonuses = []
 bullets = []
 bonus_timer = 0
 
+game_mode = "menu"
 running = True
 while running:
+    if game_mode == "menu":
+        main_menu()
     clock.tick(FPS)
     bonus_timer += 1
 
