@@ -90,7 +90,7 @@ class Bonus:
         elif self.bonus_type == 'coin':
             self.image.fill((255, 255, 0))  # Желтый для монет
         self.rect = self.image.get_rect(center=(random.randint(50, WIDTH - 50), -50))
-        self.speed = 3
+        self.speed = 2
 
     def update(self):
         self.rect.y += self.speed
@@ -107,7 +107,7 @@ class Obstacle:
         self.image = pygame.Surface((50, 50))
         self.image.fill(RED)
         self.rect = self.image.get_rect(center=(random.randint(50, WIDTH - 50), -50))
-        self.base_speed = 3
+        self.base_speed = 2
         self.speed = round(random.uniform(self.base_speed, self.base_speed * 1.5), 1)
 
     def update(self):
@@ -126,12 +126,14 @@ def increase_difficulty(timer):
         player.speed += 0.1  # Увеличение скорости машины
 
 
-def draw_interface(screen, score, speed):
+def draw_interface(screen, score, speed, invincible_timer):
     font = pygame.font.SysFont(None, 36)
     score_text = font.render(f"Score: {score}", True, WHITE)
     speed_text = font.render(f"Speed: {round(speed, 2)}", True, WHITE)
+    invincible_text = font.render(f"Invincibility: {invincible_timer // 60}", True, WHITE)
     screen.blit(score_text, (10, 10))
     screen.blit(speed_text, (10, 50))
+    screen.blit(invincible_text, (WIDTH - 200, 10))
 
 
 def check_collisions(player, obstacles):
@@ -147,7 +149,7 @@ def check_bonus_collision(player, bonuses, obstacles):
         if player.rect.colliderect(bonus.rect):
             if bonus.bonus_type == 'invincibility':
                 player.invincible = True
-                player.invincible_timer = 600
+                player.invincible_timer += 600
             elif bonus.bonus_type == 'slowdown':
                 for obstacle in obstacles:
                     obstacle.speed -= 2
@@ -218,7 +220,7 @@ while running:
         bonus.draw(screen)
 
     # Отрисовка интерфейса
-    draw_interface(screen, player.score, player.speed)
+    draw_interface(screen, player.score, obstacle.base_speed, player.invincible_timer)
     pygame.display.flip()
 
 pygame.quit()
