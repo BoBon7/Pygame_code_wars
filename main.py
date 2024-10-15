@@ -101,6 +101,43 @@ class Bonus:
         screen.blit(self.image, self.rect)
 
 
+class Bullet:
+    def __init__(self, x, y):
+        self.image = pygame.Surface((5, 10))
+        self.image.fill(WHITE)
+        self.rect = self.image.get_rect(center=(x, y))
+        self.speed = 10
+
+    def update(self):
+        self.rect.y -= self.speed  # Движение вверх
+        if self.rect.bottom < 0:
+            return False  # Снаряд исчезает при выходе за экран
+        return True
+
+    def draw(self, screen):
+        screen.blit(self.image, self.rect)
+
+def update_bullets(bullets, bonuses, obstacles):
+    for bullet in bullets[:]:
+        if not bullet.update():
+            bullets.remove(bullet)
+
+        # Проверяем столкновения с бонусами
+        for bonus in bonuses[:]:
+            if bullet.rect.colliderect(bonus.rect):
+                bonuses.remove(bonus)  # Уничтожаем бонус
+                bullets.remove(bullet)  # Уничтожаем снаряд
+                break  # Выходим, так как снаряд уже уничтожен
+
+        # Проверяем столкновения с препятствиями
+        for obstacle in obstacles[:]:
+            if bullet.rect.colliderect(obstacle.rect):
+                obstacles.remove(obstacle)  # Уничтожаем препятствие
+                obstacles.append(Obstacle())
+                bullets.remove(bullet)  # Уничтожаем снаряд
+                break  # Выходим, так как снаряд уже уничтожен
+
+
 # Класс для препятствий
 class Obstacle:
     def __init__(self):
@@ -173,6 +210,7 @@ clock = pygame.time.Clock()
 player = PlayerCar()
 obstacles = [Obstacle() for _ in range(5)]
 bonuses = []
+bullets = []
 bonus_timer = 0
 
 running = True
@@ -186,6 +224,10 @@ while running:
     for event in pygame.event.get():
         if event.type == pygame.QUIT:
             running = False
+        elif event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            # Стрельба левой кнопкой мыши
+            bullet = Bullet(player.rect.centerx, player.rect.top)
+            bullets.append(bullet)
 
     # Увеличение сложности
     increase_difficulty(pygame.time.get_ticks())
@@ -205,6 +247,7 @@ while running:
 
     # Проверка столкновений с бонусами
     check_bonus_collision(player, bonuses, obstacles)
+    update_bullets(bullets, bonuses, obstacles)
 
     # Проверка столкновений с препятствиями
     if check_collisions(player, obstacles):
@@ -218,6 +261,8 @@ while running:
         obstacle.draw(screen)
     for bonus in bonuses:
         bonus.draw(screen)
+    for bullet in bullets:
+        bullet.draw(screen)
 
     # Отрисовка интерфейса
     draw_interface(screen, player.score, obstacle.base_speed, player.invincible_timer)
